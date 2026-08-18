@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BarberStudio Pro - Gestión & Agendamiento</title>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0f1115;
+            --bg-card: #181b22;
+            --bg-card-hover: #212530;
+            --surface: #262b36;
+            --gold-primary: #d4af37;
+            --gold-light: #f3e5ab;
+            --gold-dark: #aa820a;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-dark: #111827;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --accent-red: #ef4444;
+            --border-color: #2d3446;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-glow: 0 10px 30px -10px rgba(212, 175, 55, 0.25);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- HEADER & NAVIGATION --- */
+        header {
+            background: rgba(24, 27, 34, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 0.8rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .logo i {
+            color: var(--gold-primary);
+            font-size: 1.6rem;
+        }
+
+        .logo span {
+            color: var(--gold-primary);
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+        }
+
+        /* Mode Switcher Toggle */
+        .role-switch-container {
+            display: flex;
+            background: var(--surface);
+            padding: 4px;
+            border-radius: 40px;
+            border: 1px solid var(--border-color);
+        }
+
+        .role-btn {
+            padding: 8px 18px;
+            border-radius: 30px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .role-btn.active {
+            background: var(--gold-primary);
+            color: var(--text-dark);
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* MAIN WRAPPER */
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- CLIENT VIEW NAV TABS --- */
+        .nav-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--gold-primary);
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+            color: var(--text-dark);
+            border-color: var(--gold-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* --- HERO BANNER --- */
+        .hero-banner {
+            background: linear-gradient(rgba(15, 17, 21, 0.7), rgba(15, 17, 21, 0.9)), 
+                        url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=1200') center/cover;
+            border-radius: var(--radius-lg);
+            padding: 3.5rem 2.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-banner h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            margin-bottom: 0.8rem;
+            color: #fff;
+        }
+
+        .hero-banner p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+        }
+
+        /* --- BOOKING FORM LAYOUT --- */
+        .booking-grid {
+            display: grid;
+            grid-template-columns: 1.8fr 1.2fr;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1.8rem;
+            position: relative;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--gold-primary);
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            border-color: var(--gold-primary);
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Custom Checkbox Cards */
+        .addons-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .addon-card {
+            background: var(--surface);
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: var(--transition);
+        }
+
+        .addon-card:hover {
+            border-color: var(--gold-primary);
+        }
+
+        .addon-card input[type="checkbox"] {
+            accent-color: var(--gold-primary);
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Image Upload Box */
+        .upload-box {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            text-align: center;
+            background: var(--surface);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .upload-box:hover {
+            border-color: var(--gold-primary);
+            background: rgba(212, 175, 55, 0.05);
+        }
+
+        .upload-box i {
+            font-size: 2rem;
+            color: var(--gold-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .img-preview {
+            width: 100%;
+            max-height: 120px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* Order Summary Card */
+        .summary-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.95rem;
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 1.2rem 0;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--gold-primary);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+            border: none;
+            border-radius: var(--radius-sm);
+            color: var(--text-dark);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* --- GALLERY GRID --- */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .gallery-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .gallery-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--gold-primary);
+        }
+
+        .gallery-img {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+        }
+
+        .gallery-info {
+            padding: 1.2rem;
+        }
+
+        .gallery-info h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .gallery-info p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .gallery-tag {
+            display: inline-block;
+            background: rgba(212, 175, 55, 0.15);
+            color: var(--gold-primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* --- APPOINTMENTS / TICKETS LIST --- */
+        .appointment-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--gold-primary);
+            border-radius: var(--radius-md);
+            padding: 1.2rem 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .badge-pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+        }
+
+        .badge-completed {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+
+        /* --- ADMIN DASHBOARD --- */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        /* Analytics KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 3px;
+            background: var(--gold-primary);
+        }
+
+        .kpi-title {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 0.4rem;
+        }
+
+        .kpi-trend {
+            font-size: 0.82rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .kpi-trend.up { color: var(--accent-green); }
+        .kpi-trend.down { color: var(--accent-red); }
+
+        /* Charts Layout */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        /* Admin Data Tables */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .custom-table th {
+            background: var(--surface);
+            padding: 12px 16px;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .custom-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-main);
+        }
+
+        .custom-table tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .table-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .action-btn:hover {
+            border-color: var(--gold-primary);
+            color: var(--gold-primary);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 500px;
+            padding: 2rem;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 992px) {
+            .booking-grid { grid-template-columns: 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            header { padding: 0.8rem 1rem; flex-direction: column; gap: 1rem; }
+            main { padding: 1rem; }
+            .form-row, .addons-grid { grid-template-columns: 1fr; }
+            .hero-banner { padding: 2rem 1.2rem; }
+            .hero-banner h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP HEADER -->
+    <header>
+        <div class="logo">
+            <i class="fa-solid fa-scissors"></i>
+            <div>Barber<span>Studio</span> Pro</div>
+        </div>
+
+        <!-- Role Selector Switch -->
+        <div class="role-switch-container">
+            <button class="role-btn active" onclick="switchRole('client')">
+                <i class="fa-solid fa-user"></i> Vista Cliente
+            </button>
+            <button class="role-btn" onclick="switchRole('admin')">
+                <i class="fa-solid fa-user-shield"></i> Panel Administrador
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- ================================================================= -->
+        <!--                         VISTA CLIENTE                             -->
+        <!-- ================================================================= -->
+        <section id="client-view" class="view-section active">
+            
+            <div class="hero-banner">
+                <h1>Estilo & Precision Masculina</h1>
+                <p>Reserva tu cita en segundos con nuestros barberos máster. Calidad impecable y atención personalizada.</p>
+            </div>
+
+            <!-- Tabs de Navegación Cliente -->
+            <div class="nav-tabs">
+                <button class="tab-btn active" onclick="openTab('client-book', this)">
+                    <i class="fa-solid fa-calendar-plus"></i> Agendar Cita
+                </button>
+                <button class="tab-btn" onclick="openTab('client-appointments', this)">
+                    <i class="fa-solid fa-clock-history"></i> Mis Citas & Historial
+                </button>
+                <button class="tab-btn" onclick="openTab('client-gallery', this)">
+                    <i class="fa-solid fa-images"></i> Galería de Estilos
+                </button>
+                <button class="tab-btn" onclick="openTab('client-payments', this)">
+                    <i class="fa-solid fa-wallet"></i> Mis Pagos
+                </button>
+            </div>
+
+            <!-- TAB 1: FORMULARIO AGENDAR CITA -->
+            <div id="client-book" class="tab-content active">
+                <form id="booking-form" onsubmit="handleNewBooking(event)">
+                    <div class="booking-grid">
+                        
+                        <!-- Campos del Formulario -->
+                        <div class="card">
+                            <div class="card-title">
+                                <i class="fa-solid fa-user-pen"></i> Detalle de la Cita
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Nombre Completo</label>
+                                    <input type="text" id="client-name" class="form-control" placeholder="Ej. Carlos Mendoza" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Número de Teléfono</label>
+                                    <input type="tel" id="client-phone" class="form-control" placeholder="Ej. 81 1234 5678" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Día de Atención</label>
+                                    <input type="date" id="booking-date" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Horario Disponible</label>
+                                    <select id="booking-time" class="form-control" required>
+                                        <option value="">Selecciona hora...</option>
+                                        <option value="10:00 AM">10:00 AM</option>
+                                        <option value="11:30 AM">11:30 AM</option>
+                                        <option value="02:00 PM">02:00 PM</option>
+                                        <option value="04:00 PM">04:00 PM</option>
+                                        <option value="05:30 PM">05:30 PM</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Tipo de Corte Principal</label>
+                                <select id="main-service" class="form-control" onchange="calculateTotal()" required>
+                                    <option value="250" data-name="Fade / Taper Fade">Fade / Taper Fade - $250 MXN</option>
+                                    <option value="220" data-name="Corte Clásico Ejecutivo">Corte Clásico Ejecutivo - $220 MXN</option>
+                                    <option value="300" data-name="Mullet / Texture Crop">Mullet / Texture Crop - $300 MXN</option>
+                                    <option value="180" data-name="Perfilado de Barba Solo">Perfilado de Barba Solo - $180 MXN</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Servicios Adicionales (Opcional)</label>
+                                <div class="addons-grid">
+                                    <label class="addon-card">
+                                        <input type="checkbox" id="addon-barba" value="120" onchange="calculateTotal()">
+                                        <div>
+                                            <strong>Servicio de Barba</strong>
+                                            <div style="font-size:0.8rem; color: var(--text-muted);">+$120 MXN</div>
+                                        </div>
+                                    </label>
+                                    <label class="addon-card">
+                                        <input type="checkbox" id="addon-skincare" value="150" onchange="calculateTotal()">
+                                        <div>
+                                            <strong>Skin Care Facial</strong>
+                                            <div style="font-size:0.8rem; color: var(--text-muted);">+$150 MXN</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Fotografía de Referencia -->
+                            <div class="form-group">
+                                <label>Imagen / Fotografía de Referencia</label>
+                                <div class="upload-box" onclick="document.getElementById('ref-image-file').click()">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    <p style="font-size:0.9rem; font-weight:600;">Haz clic para subir una foto de referencia</p>
+                                    <p style="font-size:0.75rem; color: var(--text-muted);">PNG, JPG o WEBP (Máx 5MB)</p>
+                                    <input type="file" id="ref-image-file" accept="image/*" style="display:none;" onchange="previewUserImage(event)">
+                                    <img id="ref-preview" class="img-preview" alt="Vista previa">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Método de Pago</label>
+                                <select id="payment-method" class="form-control" required>
+                                    <option value="Tarjeta de Crédito / Débito">Tarjeta de Crédito / Débito</option>
+                                    <option value="Efectivo en Local">Efectivo en Local</option>
+                                    <option value="Transferencia SPEI">Transferencia SPEI</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Resumen y Confirmación -->
+                        <div class="card summary-card">
+                            <div>
+                                <div class="card-title">
+                                    <i class="fa-solid fa-receipt"></i> Resumen del Pedido
+                                </div>
+
+                                <div class="summary-item">
+                                    <span id="summary-service-name">Fade / Taper Fade</span>
+                                    <span id="summary-service-price">$250 MXN</span>
+                                </div>
+                                <div id="summary-addons-container">
+                                    <!-- Dinámico por JS -->
+                                </div>
+                                <div class="summary-item">
+                                    <span>IVA Incluido</span>
+                                    <span>$0 MXN</span>
+                                </div>
+
+                                <div class="summary-total">
+                                    <span>Total Estimado</span>
+                                    <span id="summary-total-price">$250 MXN</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-primary">
+                                <i class="fa-solid fa-check-circle"></i> Confirmar y Agendar Cita
+                            </button>
+                        </div>
+
+                    </div>
+                </form>
+            </div>
+
+            <!-- TAB 2: MIS CITAS E HISTORIAL -->
+            <div id="client-appointments" class="tab-content">
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-calendar-check"></i> Próxima Cita Agendada</div>
+                    <div id="active-appointment-container">
+                        <!-- Renderizado por JS -->
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 1.5rem;">
+                    <div class="card-title"><i class="fa-solid fa-history"></i> Historial de Citas Anteriores</div>
+                    <div id="past-appointments-container">
+                        <!-- Renderizado por JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: GALERÍA DE CORTES -->
+            <div id="client-gallery" class="tab-content">
+                <div class="gallery-grid" id="client-gallery-grid">
+                    <!-- Renderizado por JS -->
+                </div>
+            </div>
+
+            <!-- TAB 4: MIS PAGOS -->
+            <div id="client-payments" class="tab-content">
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-receipt"></i> Historial de Transacciones</div>
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Pago</th>
+                                    <th>Fecha</th>
+                                    <th>Concepto</th>
+                                    <th>Método</th>
+                                    <th>Monto</th>
+                                    <th>Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody id="client-payments-table">
+                                <!-- Renderizado por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ================================================================= -->
+        <!--                      PANEL ADMINISTRADOR                          -->
+        <!-- ================================================================= -->
+        <section id="admin-view" class="view-section">
+            
+            <div class="admin-header">
+                <div>
+                    <h2>Panel de Control Empresarial</h2>
+                    <p style="color: var(--text-muted);">Métricas operativas, control financiero e inventario en tiempo real.</p>
+                </div>
+                <button class="action-btn" onclick="openNewCutModal()" style="border-color: var(--gold-primary); color: var(--gold-primary);">
+                    <i class="fa-solid fa-plus"></i> Publicar Nuevo Corte
+                </button>
+            </div>
+
+            <!-- METRICAS KPI -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-title">Ingresos Mensuales</div>
+                    <div class="kpi-value" id="kpi-revenue">$42,850 MXN</div>
+                    <div class="kpi-trend up"><i class="fa-solid fa-arrow-trend-up"></i> +18.4% vs mes anterior</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Citas Confirmadas</div>
+                    <div class="kpi-value" id="kpi-appointments">128</div>
+                    <div class="kpi-trend up"><i class="fa-solid fa-arrow-trend-up"></i> +12 este mes</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Ticket Promedio</div>
+                    <div class="kpi-value">$334 MXN</div>
+                    <div class="kpi-trend up"><i class="fa-solid fa-arrow-trend-up"></i> +5% ventas cruzadas</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Alertas Inventario</div>
+                    <div class="kpi-value" style="color: var(--accent-red);" id="kpi-inventory-alert">2 Insumos</div>
+                    <div class="kpi-trend down"><i class="fa-solid fa-triangle-exclamation"></i> Requiere reabastecimiento</div>
+                </div>
+            </div>
+
+            <!-- GRÁFICAS FINANCIERAS DE ALTO NIVEL -->
+            <div class="charts-grid">
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-chart-line"></i> Comportamiento de Ingresos (Mensual)</div>
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title"><i class="fa-solid fa-chart-pie"></i> Distribución de Servicios</div>
+                    <div class="chart-container">
+                        <canvas id="servicesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GESTIÓN DE AGENDA Y CITAS -->
+            <div class="card" style="margin-bottom: 2rem;">
+                <div class="card-title"><i class="fa-solid fa-calendar-days"></i> Control de Agenda y Próximas Citas</div>
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Teléfono</th>
+                                <th>Fecha & Hora</th>
+                                <th>Servicios</th>
+                                <th>Ref. Foto</th>
+                                <th>Cobro Est.</th>
+                                <th>Estatus</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-appointments-table">
+                            <!-- JS Output -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- INVENTARIO Y HERRAMIENTAS -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <div class="card-title" style="margin: 0;"><i class="fa-solid fa-boxes-stacked"></i> Inventario de Insumos & Herramientas</div>
+                    <button class="action-btn" onclick="openInventoryModal()"><i class="fa-solid fa-plus"></i> Agregar Insumo</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Producto / Herramienta</th>
+                                <th>Categoría</th>
+                                <th>Cantidad</th>
+                                <th>Stock Mínimo</th>
+                                <th>Costo Unitario</th>
+                                <th>Estado Stock</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-inventory-table">
+                            <!-- JS Output -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- MODAL AGREGAR NUEVO CORTE A GALERÍA -->
+    <div class="modal-overlay" id="cut-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Publicar Nuevo Estilo</h3>
+                <button class="close-modal" onclick="closeCutModal()">&times;</button>
+            </div>
+            <form onsubmit="handleSaveNewCut(event)">
+                <div class="form-group">
+                    <label>Título del Corte</label>
+                    <input type="text" id="new-cut-title" class="form-control" placeholder="Ej. Low Fade Textured" required>
+                </div>
+                <div class="form-group">
+                    <label>Categoría / Estilo</label>
+                    <input type="text" id="new-cut-style" class="form-control" placeholder="Ej. Urbano / Moderno" required>
+                </div>
+                <div class="form-group">
+                    <label>Precio Sugerido ($ MXN)</label>
+                    <input type="number" id="new-cut-price" class="form-control" placeholder="280" required>
+                </div>
+                <div class="form-group">
+                    <label>URL de Imagen</label>
+                    <input type="url" id="new-cut-url" class="form-control" placeholder="https://..." required>
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top: 1rem;">Publicar en Galería</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL AGREGAR INVENTARIO -->
+    <div class="modal-overlay" id="inventory-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>Agregar Insumo o Herramienta</h3>
+                <button class="close-modal" onclick="closeInventoryModal()">&times;</button>
+            </div>
+            <form onsubmit="handleSaveInventory(event)">
+                <div class="form-group">
+                    <label>Nombre del Producto</label>
+                    <input type="text" id="inv-name" class="form-control" placeholder="Ej. Pomada Mate Suavecito" required>
+                </div>
+                <div class="form-group">
+                    <label>Categoría</label>
+                    <select id="inv-category" class="form-control">
+                        <option value="Consumible">Consumible</option>
+                        <option value="Herramienta">Herramienta</option>
+                        <option value="Venta al Cliente">Venta al Cliente</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cantidad Inicial</label>
+                        <input type="number" id="inv-qty" class="form-control" placeholder="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Stock Mínimo</label>
+                        <input type="number" id="inv-min" class="form-control" placeholder="3" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Costo Unitario ($ MXN)</label>
+                    <input type="number" id="inv-cost" class="form-control" placeholder="180" required>
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top: 1rem;">Guardar en Inventario</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /* --- ESTADO INICIAL DE DATOS --- */
+        let activeRole = 'client';
+        let userUploadedImage = null;
+
+        let galleryItems = [
+            { id: 1, title: 'Fade Moderno Alto', style: 'Urbano / Juvenil', price: 250, img: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&q=80&w=500' },
+            { id: 2, title: 'Perfilado & Barba Royal', style: 'Ejecutivo / Clásico', price: 320, img: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&q=80&w=500' },
+            { id: 3, title: 'Mullet Design & Texture', style: 'Tendencia 2026', price: 300, img: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&q=80&w=500' },
+            { id: 4, title: 'Corte Tradicional Navaja', style: 'Clásico Vintage', price: 220, img: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&q=80&w=500' }
+        ];
+
+        let appointments = [
+            { id: 'CIT-9821', client: 'Carlos Mendoza', phone: '81 1234 5678', date: '2026-08-16', time: '10:00 AM', services: 'Fade + Barba', total: 370, method: 'Tarjeta', status: 'Pendiente', refImg: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&q=80&w=150' },
+            { id: 'CIT-9822', client: 'Roberto Gómez', phone: '81 8765 4321', date: '2026-08-16', time: '11:30 AM', services: 'Corte Ejecutivo', total: 220, method: 'Efectivo', status: 'Pendiente', refImg: null },
+            { id: 'CIT-9810', client: 'Alejandro Silva', phone: '81 5555 9999', date: '2026-08-10', time: '04:00 PM', services: 'Mullet + Skin Care', total: 450, method: 'Transferencia', status: 'Completada', refImg: null }
+        ];
+
+        let inventory = [
+            { id: 1, name: 'Pomada Mate Suavecito 4oz', category: 'Venta / Consumo', qty: 12, min: 5, cost: 210 },
+            { id: 2, name: 'Aceite Esencial Barba 30ml', category: 'Consumible', qty: 2, min: 4, cost: 140 },
+            { id: 3, name: 'Cuchillas Barbería (Caja 100)', category: 'Herramienta', qty: 85, min: 20, cost: 90 },
+            { id: 4, name: 'Toallas Faciales Calientes', category: 'Consumible', qty: 3, min: 10, cost: 45 }
+        ];
+
+        let clientPayments = [
+            { id: 'PAY-104', date: '10 Ago 2026', concept: 'Mullet + Skin Care', method: 'Transferencia', amount: 450, status: 'Pagado' },
+            { id: 'PAY-092', date: '28 Jul 2026', concept: 'Fade Moderno Alto', method: 'Tarjeta', amount: 250, status: 'Pagado' }
+        ];
+
+        /* --- CONTROLLER: VISTAS Y TABS --- */
+        function switchRole(role) {
+            activeRole = role;
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+
+            if(role === 'client') {
+                event.currentTarget.classList.add('active');
+                document.getElementById('client-view').classList.add('active');
+            } else {
+                event.currentTarget.classList.add('active');
+                document.getElementById('admin-view').classList.add('active');
+                renderAdminTables();
+                initCharts();
+            }
+        }
+
+        function openTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        /* --- CLIENT LOGIC: FORM CALCULATOR --- */
+        function calculateTotal() {
+            const mainSelect = document.getElementById('main-service');
+            const mainPrice = parseInt(mainSelect.value);
+            const mainName = mainSelect.options[mainSelect.selectedIndex].getAttribute('data-name');
+
+            let addonsTotal = 0;
+            let addonsHTML = '';
+
+            const barba = document.getElementById('addon-barba');
+            const skincare = document.getElementById('addon-skincare');
+
+            if(barba.checked) {
+                addonsTotal += parseInt(barba.value);
+                addonsHTML += `<div class="summary-item"><span>+ Servicio de Barba</span><span>$120 MXN</span></div>`;
+            }
+
+            if(skincare.checked) {
+                addonsTotal += parseInt(skincare.value);
+                addonsHTML += `<div class="summary-item"><span>+ Skin Care Facial</span><span>$150 MXN</span></div>`;
+            }
+
+            const grandTotal = mainPrice + addonsTotal;
+
+            document.getElementById('summary-service-name').innerText = mainName;
+            document.getElementById('summary-service-price').innerText = `$${mainPrice} MXN`;
+            document.getElementById('summary-addons-container').innerHTML = addonsHTML;
+            document.getElementById('summary-total-price').innerText = `$${grandTotal} MXN`;
+        }
+
+        function previewUserImage(e) {
+            const file = e.target.files[0];
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    userUploadedImage = evt.target.result;
+                    const img = document.getElementById('ref-preview');
+                    img.src = userUploadedImage;
+                    img.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function handleNewBooking(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('client-name').value;
+            const phone = document.getElementById('client-phone').value;
+            const date = document.getElementById('booking-date').value;
+            const time = document.getElementById('booking-time').value;
+            const method = document.getElementById('payment-method').value;
+
+            const mainSelect = document.getElementById('main-service');
+            const mainPrice = parseInt(mainSelect.value);
+            const mainName = mainSelect.options[mainSelect.selectedIndex].getAttribute('data-name');
+
+            let total = mainPrice;
+            let serviceLabel = mainName;
+
+            if(document.getElementById('addon-barba').checked) {
+                total += 120;
+                serviceLabel += ' + Barba';
+            }
+            if(document.getElementById('addon-skincare').checked) {
+                total += 150;
+                serviceLabel += ' + SkinCare';
+            }
+
+            const newApp = {
+                id: 'CIT-' + Math.floor(1000 + Math.random() * 9000),
+                client: name,
+                phone: phone,
+                date: date,
+                time: time,
+                services: serviceLabel,
+                total: total,
+                method: method,
+                status: 'Pendiente',
+                refImg: userUploadedImage
+            };
+
+            appointments.unshift(newApp);
+            alert('¡Cita agendada con éxito en BarberStudio Pro!');
+            document.getElementById('booking-form').reset();
+            document.getElementById('ref-preview').style.display = 'none';
+            userUploadedImage = null;
+            calculateTotal();
+
+            renderClientAppointments();
+        }
+
+        function renderClientAppointments() {
+            const activeContainer = document.getElementById('active-appointment-container');
+            const pastContainer = document.getElementById('past-appointments-container');
+
+            const pending = appointments.filter(a => a.status === 'Pendiente');
+            const completed = appointments.filter(a => a.status === 'Completada');
+
+            if(pending.length > 0) {
+                let item = pending[0];
+                activeContainer.innerHTML = `
+                    <div class="appointment-card">
+                        <div>
+                            <div style="font-size:0.8rem; color:var(--gold-primary); font-weight:700;">${item.id}</div>
+                            <h3 style="margin: 4px 0;">${item.services}</h3>
+                            <p style="font-size:0.88rem; color:var(--text-muted);">
+                                <i class="fa-regular fa-calendar"></i> ${item.date} a las ${item.time}
+                            </p>
+                            <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">
+                                Método de Pago: ${item.method}
+                            </p>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="badge badge-pending">Confirmada / Pendiente</span>
+                            <div style="font-size:1.3rem; font-weight:800; margin-top:8px; color:var(--text-main);">$${item.total} MXN</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                activeContainer.innerHTML = `<p style="color:var(--text-muted);">No tienes citas agendadas actualmente.</p>`;
+            }
+
+            let pastHTML = '';
+            completed.forEach(item => {
+                pastHTML += `
+                    <div class="appointment-card" style="border-left-color: var(--accent-green);">
+                        <div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${item.id}</div>
+                            <h3>${item.services}</h3>
+                            <p style="font-size:0.88rem; color:var(--text-muted);">${item.date}</p>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="badge badge-completed">Atendida</span>
+                            <div style="font-size:1.1rem; font-weight:700; margin-top:4px;">$${item.total} MXN</div>
+                        </div>
+                    </div>
+                `;
+            });
+            pastContainer.innerHTML = pastHTML || `<p style="color:var(--text-muted);">No hay historial registrado.</p>`;
+        }
+
+        function renderGallery() {
+            const grid = document.getElementById('client-gallery-grid');
+            let html = '';
+            galleryItems.forEach(item => {
+                html += `
+                    <div class="gallery-card">
+                        <img src="${item.img}" class="gallery-img" alt="${item.title}">
+                        <div class="gallery-info">
+                            <h3>${item.title}</h3>
+                            <p>${item.style}</p>
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span class="gallery-tag">$${item.price} MXN</span>
+                                <i class="fa-regular fa-heart" style="cursor:pointer; color:var(--gold-primary);"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        function renderClientPayments() {
+            const tbody = document.getElementById('client-payments-table');
+            let html = '';
+            clientPayments.forEach(p => {
+                html += `
+                    <tr>
+                        <td><strong>${p.id}</strong></td>
+                        <td>${p.date}</td>
+                        <td>${p.concept}</td>
+                        <td>${p.method}</td>
+                        <td><strong>$${p.amount} MXN</strong></td>
+                        <td><span class="badge badge-completed">${p.status}</span></td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        /* --- ADMIN LOGIC --- */
+        function renderAdminTables() {
+            // Citas
+            const appTbody = document.getElementById('admin-appointments-table');
+            let appHtml = '';
+            appointments.forEach(a => {
+                const imgTag = a.refImg ? `<img src="${a.refImg}" class="table-img">` : `<span style="color:var(--text-muted); font-size:0.8rem;">Sin foto</span>`;
+                const isPending = a.status === 'Pendiente';
+                
+                appHtml += `
+                    <tr>
+                        <td><strong>${a.client}</strong></td>
+                        <td>${a.phone}</td>
+                        <td>${a.date}<br><small style="color:var(--text-muted);">${a.time}</small></td>
+                        <td>${a.services}</td>
+                        <td>${imgTag}</td>
+                        <td><strong>$${a.total} MXN</strong></td>
+                        <td><span class="badge ${isPending ? 'badge-pending' : 'badge-completed'}">${a.status}</span></td>
+                        <td>
+                            ${isPending ? `<button class="action-btn" onclick="markAsCompleted('${a.id}')"><i class="fa-solid fa-check"></i> Cobrar</button>` : `<i class="fa-solid fa-circle-check" style="color:var(--accent-green)"></i>`}
+                        </td>
+                    </tr>
+                `;
+            });
+            appTbody.innerHTML = appHtml;
+
+            // Inventario
+            const invTbody = document.getElementById('admin-inventory-table');
+            let invHtml = '';
+            inventory.forEach(i => {
+                const isLow = i.qty <= i.min;
+                invHtml += `
+                    <tr>
+                        <td><strong>${i.name}</strong></td>
+                        <td>${i.category}</td>
+                        <td>${i.qty} unidades</td>
+                        <td>${i.min}</td>
+                        <td>$${i.cost} MXN</td>
+                        <td>
+                            <span class="badge ${isLow ? 'badge-pending' : 'badge-completed'}" style="${isLow ? 'background:rgba(239, 68, 68, 0.15); color:#ef4444;' : ''}">
+                                ${isLow ? 'Stock Bajo' : 'Normal'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="action-btn" onclick="addStock(${i.id})">+ Reabastecer</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            invTbody.innerHTML = invHtml;
+        }
+
+        function markAsCompleted(id) {
+            const item = appointments.find(a => a.id === id);
+            if(item) {
+                item.status = 'Completada';
+                renderAdminTables();
+                alert(`Cita ${id} cobrada y completada correctamente.`);
+            }
+        }
+
+        function addStock(id) {
+            const item = inventory.find(i => i.id === id);
+            if(item) {
+                item.qty += 5;
+                renderAdminTables();
+            }
+        }
+
+        /* Modales Admin */
+        function openNewCutModal() { document.getElementById('cut-modal').classList.add('active'); }
+        function closeCutModal() { document.getElementById('cut-modal').classList.remove('active'); }
+        
+        function handleSaveNewCut(e) {
+            e.preventDefault();
+            const title = document.getElementById('new-cut-title').value;
+            const style = document.getElementById('new-cut-style').value;
+            const price = parseInt(document.getElementById('new-cut-price').value);
+            const url = document.getElementById('new-cut-url').value;
+
+            galleryItems.unshift({
+                id: Date.now(),
+                title: title,
+                style: style,
+                price: price,
+                img: url
+            });
+
+            renderGallery();
+            closeCutModal();
+            alert('¡Nuevo estilo publicado exitosamente!');
+        }
+
+        function openInventoryModal() { document.getElementById('inventory-modal').classList.add('active'); }
+        function closeInventoryModal() { document.getElementById('inventory-modal').classList.remove('active'); }
+
+        function handleSaveInventory(e) {
+            e.preventDefault();
+            const name = document.getElementById('inv-name').value;
+            const cat = document.getElementById('inv-category').value;
+            const qty = parseInt(document.getElementById('inv-qty').value);
+            const min = parseInt(document.getElementById('inv-min').value);
+            const cost = parseInt(document.getElementById('inv-cost').value);
+
+            inventory.push({
+                id: Date.now(),
+                name: name,
+                category: cat,
+                qty: qty,
+                min: min,
+                cost: cost
+            });
+
+            renderAdminTables();
+            closeInventoryModal();
+            alert('Insumo registrado correctamente.');
+        }
+
+        /* --- CHART.JS CONFIGURATION --- */
+        let revenueChartInstance = null;
+        let servicesChartInstance = null;
+
+        function initCharts() {
+            if(revenueChartInstance) revenueChartInstance.destroy();
+            if(servicesChartInstance) servicesChartInstance.destroy();
+
+            // Line Chart: Ingresos Mensuales
+            const ctx1 = document.getElementById('revenueChart').getContext('2d');
+            revenueChartInstance = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago (Actual)'],
+                    datasets: [{
+                        label: 'Ingresos ($ MXN)',
+                        data: [28000, 31000, 29500, 35000, 38000, 36500, 41000, 42850],
+                        borderColor: '#d4af37',
+                        backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#d4af37'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: '#2d3446' }, ticks: { color: '#9ca3af' } },
+                        y: { grid: { color: '#2d3446' }, ticks: { color: '#9ca3af' } }
+                    }
+                }
+            });
+
+            // Pie Chart: Servicios Más Solicitados
+            const ctx2 = document.getElementById('servicesChart').getContext('2d');
+            servicesChartInstance = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Fade / Taper', 'Corte Ejecutivo', 'Barba Royal', 'Skin Care', 'Otros'],
+                    datasets: [{
+                        data: [45, 25, 15, 10, 5],
+                        backgroundColor: ['#d4af37', '#aa820a', '#3b82f6', '#10b981', '#6b7280'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#9ca3af', font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+
+        /* --- INITIALIZATION --- */
+        window.onload = function() {
+            // Set min date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('booking-date').min = today;
+            document.getElementById('booking-date').value = today;
+
+            calculateTotal();
+            renderClientAppointments();
+            renderGallery();
+            renderClientPayments();
+        };
+    </script>
+</body>
+</html>
